@@ -54,6 +54,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
+import { setDebugLog } from "@/lib/utils";
 
 const profileSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -129,18 +130,21 @@ export function SettingsPage({ user }: SettingsPageProps) {
   }, []);
 
   const loadPreferences = async () => {
+    setDebugLog("Loading user preferences...");
     try {
       const response = await fetch("/api/user/preferences");
       if (response.ok) {
         const data = await response.json();
+        setDebugLog("Preferences loaded successfully:", data.preferences);
         setPreferences(data.preferences || {});
       }
     } catch (error) {
-      console.error("Failed to load preferences:", error);
+      setDebugLog("Failed to load preferences:", error);
     }
   };
 
   const updatePreferences = async (updates: Partial<UserPreferences>) => {
+    setDebugLog("Updating user preferences:", updates);
     try {
       const newPreferences = { ...preferences, ...updates };
       const response = await fetch("/api/user/preferences", {
@@ -152,10 +156,12 @@ export function SettingsPage({ user }: SettingsPageProps) {
       });
 
       if (response.ok) {
+        setDebugLog("Preferences updated successfully");
         setPreferences(newPreferences);
         toast("Your preferences have been saved.");
       }
     } catch (error) {
+      setDebugLog("Error updating preferences:", error);
       toast("Failed to update preferences");
     }
   };

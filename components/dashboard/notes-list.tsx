@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Note } from "@/types";
 import { useNotesStore } from "@/hooks/use-notes-store";
-import { cn } from "@/lib/utils";
+import { cn, setDebugLog } from "@/lib/utils";
 
 interface NotesListProps {
   notes: Note[];
@@ -45,26 +45,31 @@ export function NotesList({
 
   const handleToggleFavorite = (e: React.MouseEvent, noteId: string) => {
     e.stopPropagation();
+    setDebugLog("Toggling favorite for note:", noteId);
     toggleFavorite(noteId);
   };
 
   const handleDeleteNote = (e: React.MouseEvent, noteId: string) => {
     e.stopPropagation();
+    setDebugLog("Deleting note:", noteId);
     deleteNote(noteId);
   };
 
   const handleDuplicateNote = (e: React.MouseEvent, noteId: string) => {
     e.stopPropagation();
+    setDebugLog("Duplicating note:", noteId);
     duplicateNote(noteId);
   };
 
   const handleDragStart = (e: React.DragEvent, note: Note) => {
+    setDebugLog("Drag start:", note.id);
     setDraggedNote(note);
     e.dataTransfer.setData("text/plain", note.id);
     e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragEnd = () => {
+    setDebugLog("Drag end");
     setDraggedNote(null);
   };
 
@@ -76,7 +81,7 @@ export function NotesList({
   const handleDrop = (e: React.DragEvent, targetNote: Note) => {
     e.preventDefault();
     if (draggedNote && draggedNote.id !== targetNote.id) {
-      console.log("Reorder notes:", draggedNote.id, "->", targetNote.id);
+      setDebugLog("Reorder notes:", `${draggedNote.id} -> ${targetNote.id}`);
     }
   };
 
@@ -121,7 +126,10 @@ export function NotesList({
                     "bg-accent border-accent-foreground/20 shadow-sm",
                   draggedNote?.id === note.id && "opacity-50"
                 )}
-                onClick={() => onNoteSelect(note)}
+                onClick={() => {
+                  setDebugLog("Selecting note:", note.id);
+                  onNoteSelect(note);
+                }}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0 space-y-2">

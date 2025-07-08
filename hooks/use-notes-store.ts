@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Note, Category } from "@/types";
 import { createClient } from "@/lib/supabase/client";
+import { setDebugLog } from "@/lib/utils";
 
 interface NotesStore {
   notes: Note[];
@@ -61,6 +62,7 @@ export const useNotesStore = create<NotesStore>()(
         setError: (error) => set({ error }),
 
         loadNotes: async () => {
+          setDebugLog("Loading notes...");
           set({ isLoading: true, error: null });
           try {
             const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -68,6 +70,7 @@ export const useNotesStore = create<NotesStore>()(
             const user = userData.user;
             if (!user) throw new Error("User not authenticated");
 
+            setDebugLog("User authenticated, fetching notes for user ID:", user.id);
             const { data, error } = await supabase
               .from("notes")
               .select("*")
@@ -89,13 +92,16 @@ export const useNotesStore = create<NotesStore>()(
               updatedAt: note.updated_at,
             }));
 
+            setDebugLog("Successfully loaded notes:", notes.length);
             set({ notes, isLoading: false });
           } catch (error: any) {
+            setDebugLog("Error loading notes:", error);
             set({ error: error.message, isLoading: false });
           }
         },
 
         loadCategories: async () => {
+          setDebugLog("Loading categories...");
           try {
             const { data, error } = await supabase
               .from("categories")
@@ -111,19 +117,23 @@ export const useNotesStore = create<NotesStore>()(
               createdAt: category.created_at,
             }));
 
+            setDebugLog("Successfully loaded categories:", categories.length);
             set({ categories });
           } catch (error: any) {
+            setDebugLog("Error loading categories:", error);
             set({ error: error.message });
           }
         },
 
         createNote: async () => {
+          setDebugLog("Creating new note...");
           try {
             const {
               data: { user },
             } = await supabase.auth.getUser();
             if (!user) throw new Error("User not authenticated");
 
+            setDebugLog("User authenticated, creating note for user ID:", user.id);
             const { data, error } = await supabase
               .from("notes")
               .insert({
@@ -136,7 +146,7 @@ export const useNotesStore = create<NotesStore>()(
               .single();
 
             if (error) throw error;
-            console.log("New note created:", data);
+            setDebugLog("New note created:", data);
 
             const newNote: Note = {
               id: data.id,
@@ -156,12 +166,13 @@ export const useNotesStore = create<NotesStore>()(
               selectedNote: newNote,
             }));
           } catch (error: any) {
-            console.log("Error creating note:", error);
+            setDebugLog("Error creating note:", error);
             set({ error: error.message });
           }
         },
 
         updateNote: async (id, updates) => {
+          setDebugLog("Updating note:", { id, updates });
           try {
             const { error } = await supabase
               .from("notes")
@@ -177,6 +188,7 @@ export const useNotesStore = create<NotesStore>()(
 
             if (error) throw error;
 
+            setDebugLog("Note updated successfully:", id);
             set((state) => ({
               notes: state.notes.map((note) =>
                 note.id === id
@@ -193,11 +205,13 @@ export const useNotesStore = create<NotesStore>()(
                   : state.selectedNote,
             }));
           } catch (error: any) {
+            setDebugLog("Error updating note:", { id, error });
             set({ error: error.message });
           }
         },
 
         deleteNote: async (id) => {
+          setDebugLog("Deleting note:", id);
           try {
             const { error } = await supabase
               .from("notes")
@@ -208,6 +222,7 @@ export const useNotesStore = create<NotesStore>()(
 
             if (error) throw error;
 
+            setDebugLog("Note deleted successfully:", id);
             set((state) => ({
               notes: state.notes.map((note) =>
                 note.id === id
@@ -218,6 +233,7 @@ export const useNotesStore = create<NotesStore>()(
                 state.selectedNote?.id === id ? null : state.selectedNote,
             }));
           } catch (error: any) {
+            setDebugLog("Error deleting note:", { id, error });
             set({ error: error.message });
           }
         },
