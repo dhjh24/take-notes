@@ -1,8 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { generateText } from "@/lib/gemini"
 import { createClient } from "@/lib/supabase/server"
+import { setDebugLog } from "@/lib/utils"
 
 export async function POST(request: NextRequest) {
+  setDebugLog("AI Summarize request received");
   try {
     const supabase = await createClient()
     const {
@@ -10,20 +12,24 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (!user) {
+      setDebugLog("Unauthorized summarize request");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const { text, noteId } = await request.json()
 
     if (!text) {
+      setDebugLog("Summarize request missing text");
       return NextResponse.json({ error: "Text is required" }, { status: 400 })
     }
 
+    setDebugLog("Generating summary for text length:", text.length);
     const prompt = `Please provide a concise summary of the following text:\n\n${text}`
     const summary = await generateText(prompt)
 
     // Save AI interaction to database
     if (noteId) {
+      setDebugLog("Saving AI interaction to database:", noteId);
       await supabase.from("ai_interactions").insert({
         user_id: user.id,
         note_id: noteId,
@@ -33,9 +39,10 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    setDebugLog("Summary generated successfully");
     return NextResponse.json({ result: summary })
   } catch (error) {
-    console.error("AI Summarize Error:", error)
+    setDebugLog("AI Summarize Error:", error);
     return NextResponse.json({ error: "Failed to summarize text" }, { status: 500 })
   }
 }

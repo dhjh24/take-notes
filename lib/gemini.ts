@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { setDebugLog } from "@/lib/utils";
 
 if (!process.env.GEMINI_API_KEY) {
   throw new Error("GEMINI_API_KEY is not set");
@@ -11,12 +12,15 @@ export const geminiModel = genAI.getGenerativeModel({
 });
 
 export async function generateText(prompt: string): Promise<string> {
+  setDebugLog("Gemini API request initiated:", { promptLength: prompt.length });
   try {
     const result = await geminiModel.generateContent(prompt);
     const response = await result.response;
-    return response.text();
+    const text = response.text();
+    setDebugLog("Gemini API request completed successfully:", { responseLength: text.length });
+    return text;
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    setDebugLog("Gemini API Error:", error);
     throw new Error("Failed to generate text");
   }
 }

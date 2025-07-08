@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { setDebugLog } from "@/lib/utils";
 
 export function useAI() {
   const [isLoading, setIsLoading] = useState(false);
 
   const callAI = async (endpoint: string, data: any) => {
+    setDebugLog("AI request initiated:", { endpoint, data });
     setIsLoading(true);
     const toastId = toast.loading("Processing...");
     try {
@@ -20,13 +22,16 @@ export function useAI() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        setDebugLog("AI request failed:", { endpoint, error: errorData.error });
         throw new Error(errorData.error || "AI request failed");
       }
 
       const result = await response.json();
+      setDebugLog("AI request completed successfully:", { endpoint, result });
       toast.dismiss(toastId);
       return result.result;
     } catch (error: any) {
+      setDebugLog("AI request error:", { endpoint, error: error.message });
       toast.dismiss(toastId);
       toast("Failed to process AI request");
       return null;

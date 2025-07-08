@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { generateText } from "@/lib/gemini"
 import { createClient } from "@/lib/supabase/server"
+import { setDebugLog } from "@/lib/utils"
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ result: tags })
   } catch (error) {
-    console.error("AI Generate Tags Error:", error)
+    setDebugLog("AI Generate Tags Error:", error);
     return NextResponse.json({ error: "Failed to generate tags" }, { status: 500 })
   }
 }
